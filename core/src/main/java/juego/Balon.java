@@ -7,8 +7,9 @@ public class Balon extends EntidadMovil implements Colisionable {
     private Sound sonido;
     private int tipo; // 1: Balón normal, 2: Balón difícil
     
-    public Balon(Texture textura, Sound sonido, int tipo) {
-        super(textura, 200);
+    // Constructor con velocidad como float
+    public Balon(Texture textura, Sound sonido, int tipo, float velocidad) {
+        super(textura, velocidad);
         this.sonido = sonido;
         this.tipo = tipo;
     }
@@ -21,11 +22,11 @@ public class Balon extends EntidadMovil implements Colisionable {
     @Override
     public void alColisionar(ArqueroClaudioBravo arquero) {
         if (tipo == 1) {
-            arquero.atajar(); // Ataja balón normal
+            arquero.atajar();
         } else {
-            arquero.recibirGol(); // Gol con balón difícil
+            arquero.recibirGol();
         }
-        sonido.play();
+        sonido.play(0.6f);
     }
     
     @Override

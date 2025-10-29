@@ -14,6 +14,12 @@ public class SistemaDeJuego {
     private Array<Colisionable> objetos;
     private Array<Rectangle> posiciones;
     private long ultimoTiempoCreacion;
+    private long tiempoInicioJuego; 
+    
+    // Parámetros de dificultad
+    private final float VELOCIDAD_BASE = 200f; 
+    private final float INCREMENTO_POR_SEGUNDO = 10f;
+
     private Texture balonNormal;
     private Texture balonDificil;
     private Texture premioVida;
@@ -40,8 +46,12 @@ public class SistemaDeJuego {
     public void crear() {
         objetos = new Array<Colisionable>();
         posiciones = new Array<Rectangle>();
+        
+        tiempoInicioJuego = TimeUtils.nanoTime(); 
+        
         crearObjeto();
         musicaFondo.setLooping(true);
+        musicaFondo.setVolume(0.4f); 
         musicaFondo.play();
     }
 
@@ -53,21 +63,33 @@ public class SistemaDeJuego {
         posicion.height = 64;
         posiciones.add(posicion);
 
+        // 1. Calcular la velocidad base actual
+        float tiempoTranscurrido = (TimeUtils.nanoTime() - tiempoInicioJuego) / 1_000_000_000f;
+        float velocidadBaseActual = VELOCIDAD_BASE + (tiempoTranscurrido * INCREMENTO_POR_SEGUNDO);
+        float velocidadFinal;
+
         int tipoObjeto = MathUtils.random(1, 10);
         Colisionable objeto;
 
-        // Se reutiliza la instancia de Texture existente (corrección de Memory Leak)
-        if (tipoObjeto <= 5) { // 50% balones normales
-            objeto = new Balon(balonNormal, sonidoAtajada, 1);
-        } else if (tipoObjeto <= 8) { // 30% balones difíciles
-            objeto = new Balon(balonDificil, sonidoGol, 2);
-        } else if (tipoObjeto <= 9) { // 10% premio vida
-            objeto = new Premio(premioVida, sonidoPremio, 3);
-        } else { // 10% premio puntos
-            objeto = new Premio(premioPuntos, sonidoPremio, 4);
+        // 2. Crear objeto y calcular velocidad final según el tipo
+        if (tipoObjeto <= 5) { 
+            velocidadFinal = velocidadBaseActual; 
+            // CORRECCIÓN: Llamada al constructor de Balon con velocidad float
+            objeto = new Balon(balonNormal, sonidoAtajada, 1, velocidadFinal);
+        } else if (tipoObjeto <= 8) { 
+            velocidadFinal = velocidadBaseActual * 1.5f; 
+            // CORRECCIÓN: Llamada al constructor de Balon con velocidad float
+            objeto = new Balon(balonDificil, sonidoGol, 2, velocidadFinal);
+        } else if (tipoObjeto <= 9) { 
+            velocidadFinal = velocidadBaseActual * 0.7f; 
+            // CORRECCIÓN: Llamada al constructor de Premio con velocidad float
+            objeto = new Premio(premioVida, sonidoPremio, 3, velocidadFinal);
+        } else { 
+            velocidadFinal = velocidadBaseActual * 0.7f; 
+            // CORRECCIÓN: Llamada al constructor de Premio con velocidad float
+            objeto = new Premio(premioPuntos, sonidoPremio, 4, velocidadFinal);
         }
 
-        // Usar el método crear de EntidadMovil
         ((EntidadMovil)objeto).crear(posicion.x, posicion.y, 64, 64);
         objetos.add(objeto);
         ultimoTiempoCreacion = TimeUtils.nanoTime();
@@ -95,13 +117,13 @@ public class SistemaDeJuego {
                 posiciones.removeIndex(i);
 
                 if (arquero.getVidas() <= 0) {
-                    return false; // Game Over
+                    return false;
                 }
             }
         }
         return true;
     }
-
+    
     public void actualizarDibujo(SpriteBatch batch) {
         for (Colisionable objeto : objetos) {
             ((EntidadMovil)objeto).dibujar(batch);

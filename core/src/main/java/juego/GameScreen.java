@@ -48,12 +48,11 @@ public class GameScreen implements Screen {
         );
 
         camera = new OrthographicCamera();
-        camera.setToOrtho(false, 800, 480);
-        
-        // ¡CORRECCIÓN! Usar el batch existente
-        // batch = new SpriteBatch(); 
+        camera.setToOrtho(false, 800, 480); 
 
-        arquero.crear(400 - 32, 20, 64, 64);
+        float anchoArquero = 233;
+        float altoArquero = 113;
+        arquero.crear(400 - (anchoArquero / 2), 20, anchoArquero, altoArquero);
         sistema.crear();
     }
 

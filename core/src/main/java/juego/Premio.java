@@ -7,8 +7,9 @@ public class Premio extends EntidadMovil implements Colisionable {
     private Sound sonido;
     private int tipo; // 3: Premio vida extra, 4: Premio puntos extra
 
-    public Premio(Texture textura, Sound sonido, int tipo) {
-        super(textura, 150);
+    // Constructor con velocidad como float
+    public Premio(Texture textura, Sound sonido, int tipo, float velocidad) {
+        super(textura, velocidad);
         this.sonido = sonido;
         this.tipo = tipo;
     }
@@ -20,12 +21,10 @@ public class Premio extends EntidadMovil implements Colisionable {
 
     @Override
     public void alColisionar(ArqueroClaudioBravo arquero) {
-        sonido.play();
+        sonido.play(0.95f); 
         if (tipo == 3) {
-            // Vida extra: Aumenta una vida (usando el método encapsulado)
             arquero.agregarVida();
         } else if (tipo == 4) {
-            // Puntos extra: Suma 10 atajadas (usando el método encapsulado)
             arquero.sumarPuntos(10);
         }
     }
