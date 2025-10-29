@@ -13,7 +13,7 @@ import com.badlogic.gdx.utils.ScreenUtils;
 public class GameScreen implements Screen {
     final GameMenu game;
     private OrthographicCamera camera;
-    private SpriteBatch batch;	   
+    private SpriteBatch batch; 
     private BitmapFont font;
     private ArqueroClaudioBravo arquero;
     private SistemaDeJuego sistema;
@@ -22,35 +22,37 @@ public class GameScreen implements Screen {
         this.game = game;
         this.batch = game.getBatch();
         this.font = game.getFont();
-        
+
         // Cargar assets para Claudio Bravo
         Sound atajadaSound = Gdx.audio.newSound(Gdx.files.internal("atajada.wav"));
         Sound golSound = Gdx.audio.newSound(Gdx.files.internal("gol.wav"));
         Sound premioSound = Gdx.audio.newSound(Gdx.files.internal("premio.wav"));
-        
+
         arquero = new ArqueroClaudioBravo(
             new Texture(Gdx.files.internal("claudio_bravo.png")),
             atajadaSound,
             golSound
         );
-        
+
         // Cargar assets del sistema de juego
         Texture balonNormal = new Texture(Gdx.files.internal("balon_normal.png"));
         Texture balonDificil = new Texture(Gdx.files.internal("balon_dificil.png"));
         Texture premioVida = new Texture(Gdx.files.internal("vida_extra.png"));
         Texture premioPuntos = new Texture(Gdx.files.internal("puntos_extra.png"));
-        
+
         Music musicaFondo = Gdx.audio.newMusic(Gdx.files.internal("hinchada.mp3"));
-        
+
         sistema = new SistemaDeJuego(
             balonNormal, balonDificil, premioVida, premioPuntos,
             atajadaSound, golSound, premioSound, musicaFondo
         );
-        
+
         camera = new OrthographicCamera();
         camera.setToOrtho(false, 800, 480);
-        batch = new SpriteBatch();
         
+        // ¡CORRECCIÓN! Usar el batch existente
+        // batch = new SpriteBatch(); 
+
         arquero.crear(400 - 32, 20, 64, 64);
         sistema.crear();
     }
@@ -58,31 +60,31 @@ public class GameScreen implements Screen {
     @Override
     public void render(float delta) {
         ScreenUtils.clear(0.2f, 0.5f, 0.2f, 1); // Color de cancha verde
-        
+
         camera.update();
         batch.setProjectionMatrix(camera.combined);
-        
+
         batch.begin();
-        
+
         // Dibujar estadísticas
         font.draw(batch, "Atajadas: " + arquero.getAtajadas(), 5, 475);
         font.draw(batch, "Vidas: " + arquero.getVidas(), 200, 475);
         font.draw(batch, "Goles: " + arquero.getGolesRecibidos(), 400, 475);
         font.draw(batch, "HighScore: " + game.getHigherScore(), 600, 475);
+
+        // Lógica de juego continua (sin pausa por celebración)
+        arquero.mover(delta);
         
-        if (!arquero.estaCelebrando()) {
-            arquero.mover(delta);
-            if (!sistema.actualizarMovimiento(arquero)) {
-                if (game.getHigherScore() < arquero.getAtajadas())
-                    game.setHigherScore(arquero.getAtajadas());
-                game.setScreen(new GameOverScreen(game));
-                dispose();
-            }
+        if (!sistema.actualizarMovimiento(arquero)) {
+            if (game.getHigherScore() < arquero.getAtajadas())
+                game.setHigherScore(arquero.getAtajadas());
+            game.setScreen(new GameOverScreen(game));
+            dispose();
         }
-        
+
         arquero.dibujar(batch);
         sistema.actualizarDibujo(batch);
-        
+
         batch.end();
     }
 

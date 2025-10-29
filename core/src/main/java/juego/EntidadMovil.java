@@ -32,4 +32,10 @@ public abstract class EntidadMovil {
         area.width = ancho;
         area.height = alto;
     }
+    
+    public void dispose() {
+
+        textura.dispose();
+
+    }
 }
