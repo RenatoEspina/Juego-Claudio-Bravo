@@ -2,6 +2,7 @@ package juego;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.math.Rectangle;
 
 public class Premio extends EntidadMovil implements Colisionable {
     private Sound sonido;
@@ -20,7 +21,7 @@ public class Premio extends EntidadMovil implements Colisionable {
     }
 
     @Override
-    public void alColisionar(ArqueroClaudioBravo arquero) {
+    public void alColisionar(ArqueroClaudioBravo arquero, Rectangle ballArea, Rectangle arqueroHitbox) {
         sonido.play(0.95f); 
         if (tipo == 3) {
             arquero.agregarVida();

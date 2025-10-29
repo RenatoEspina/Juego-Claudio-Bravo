@@ -5,6 +5,7 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Rectangle;
 
 public class ArqueroClaudioBravo extends EntidadMovil {
     private Sound sonidoAtajada;
@@ -14,15 +15,24 @@ public class ArqueroClaudioBravo extends EntidadMovil {
     private int golesRecibidos = 0;
     
     // Atributos para el Dash
-    private final float VELOCIDAD_BASE = 500f; // CAMBIO: float
+    private final float VELOCIDAD_BASE = 500f; 
     private final float VELOCIDAD_DASH = 1500f; 
     private final float DASH_DURACION = 0.15f; 
     private final float DASH_COOLDOWN = 1.0f; 
     private float tiempoDashRestante = 0;
     private float tiempoCooldownRestante = 0;
 
+    // Constantes para márgenes de la cancha (800x480)
+    private final float ANCHO_PANTALLA = 800;
+    private final float MARGEN_LATERAL = 100; // CAMBIO: Margen aumentado a 100
+    
+    // Constantes para la Hitbox (Dimensiones originales: 233x113)
+    private final float HITBOX_OFFSET_Y = 57; 
+    private final float HITBOX_ALTURA_REDUCIDA = 113 - HITBOX_OFFSET_Y; 
+    private final float HITBOX_ANCHO_REDUCIDO = 200; 
+
     public ArqueroClaudioBravo(Texture textura, Sound atajadaSound, Sound golSound) {
-        super(textura, 500f); // CAMBIO: velocidad base a float
+        super(textura, 500f);
         this.sonidoAtajada = atajadaSound;
         this.sonidoGol = golSound;
     }
@@ -58,25 +68,50 @@ public class ArqueroClaudioBravo extends EntidadMovil {
             tiempoDashRestante = DASH_DURACION;
         }
 
-        // 4. Limites de la cancha
-        if(area.x < 50) area.x = 50;
-        // 800 (ancho pantalla) - area.width (233) - 50 (margen)
-        if(area.x > 800 - area.width - 50) area.x = 800 - area.width - 50; 
+        // 4. Limites de la cancha (con margen aumentado)
+        if(area.x < MARGEN_LATERAL) area.x = MARGEN_LATERAL;
+        
+        // Límite derecho: ANCHO_PANTALLA - area.width - MARGEN_LATERAL
+        if(area.x > ANCHO_PANTALLA - area.width - MARGEN_LATERAL) 
+            area.x = ANCHO_PANTALLA - area.width - MARGEN_LATERAL; 
     }
 
     @Override
     public void dibujar(SpriteBatch batch) {
         batch.draw(textura, area.x, area.y, area.width, area.height);
     }
+    
+    public Rectangle getHitbox() {
+        Rectangle hitbox = new Rectangle();
+        hitbox.width = HITBOX_ANCHO_REDUCIDO;
+        hitbox.height = HITBOX_ALTURA_REDUCIDA;
+
+        float offsetX = (area.width - HITBOX_ANCHO_REDUCIDO) / 2;
+        hitbox.x = area.x + offsetX; 
+
+        hitbox.y = area.y + HITBOX_OFFSET_Y;
+
+        return hitbox;
+    }
 
     public void atajar() {
         atajadas++;
+        // El sonido se gestiona en SistemaDeJuego o Balon para evitar duplicados.
     }
-
+    
+    // CAMBIO: Al recibir gol, pierde vida, suma gol y emite sonido.
     public void recibirGol() {
         golesRecibidos++;
         vidas--;
-        sonidoGol.play(0.85f);
+        // El sonido se gestiona en SistemaDeJuego o Balon para evitar duplicados.
+    }
+    
+    // NUEVO MÉTODO / CAMBIO: Para sumar goles cuando el balón se pasa (sin perder vida)
+    // También resta 1 punto de atajadas (puntaje) por no atajarlo.
+    public void incrementarGoles() {
+        golesRecibidos++;
+        atajadas = Math.max(0, atajadas - 1); // Resta 1 punto, mínimo 0.
+        // El sonido debe manejarse en SistemaDeJuego.
     }
 
     // Métodos para Premios

@@ -30,9 +30,20 @@ public class MainMenuScreen implements Screen {
         batch.setProjectionMatrix(camera.combined);
 
         batch.begin();
+        
         font.getData().setScale(2, 2);
         font.draw(batch, "Bienvenido a Claudio Bravo Atajadas!!! ", 100, camera.viewportHeight/2+50);
-        font.draw(batch, "Toca en cualquier lugar para comenzar!", 100, camera.viewportHeight/2-50);
+        
+        // **NUEVOS CONTROLES**
+        font.getData().setScale(1.5f, 1.5f); // Reducir escala para los controles
+        font.draw(batch, "Controles:", 100, camera.viewportHeight/2 - 50);
+        font.draw(batch, "⬅️ A / D ➡️: Mover", 100, camera.viewportHeight/2 - 90);
+        font.draw(batch, "SPACE: Dash de velocidad", 100, camera.viewportHeight/2 - 130);
+        font.draw(batch, "ESC / P: Pausa", 100, camera.viewportHeight/2 - 170);
+
+
+        font.getData().setScale(2, 2); // Restaurar escala para el mensaje de inicio
+        font.draw(batch, "Toca en cualquier lugar para comenzar!", 100, camera.viewportHeight/2-250);
 
         batch.end();
 

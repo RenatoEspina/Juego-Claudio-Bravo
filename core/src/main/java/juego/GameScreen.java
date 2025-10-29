@@ -2,6 +2,7 @@ package juego;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.Input; // Nueva importación para usar las teclas
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -13,7 +14,7 @@ import com.badlogic.gdx.utils.ScreenUtils;
 public class GameScreen implements Screen {
     final GameMenu game;
     private OrthographicCamera camera;
-    private SpriteBatch batch; 
+    private SpriteBatch batch;    
     private BitmapFont font;
     private ArqueroClaudioBravo arquero;
     private SistemaDeJuego sistema;
@@ -48,7 +49,7 @@ public class GameScreen implements Screen {
         );
 
         camera = new OrthographicCamera();
-        camera.setToOrtho(false, 800, 480); 
+        camera.setToOrtho(false, 800, 480);    
 
         float anchoArquero = 233;
         float altoArquero = 113;
@@ -70,6 +71,11 @@ public class GameScreen implements Screen {
         font.draw(batch, "Vidas: " + arquero.getVidas(), 200, 475);
         font.draw(batch, "Goles: " + arquero.getGolesRecibidos(), 400, 475);
         font.draw(batch, "HighScore: " + game.getHigherScore(), 600, 475);
+
+        // LÓGICA DE PAUSA POR TECLA
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) || Gdx.input.isKeyJustPressed(Input.Keys.P)) {
+            this.pause();
+        }
 
         // Lógica de juego continua (sin pausa por celebración)
         arquero.mover(delta);
@@ -104,7 +110,7 @@ public class GameScreen implements Screen {
     @Override
     public void pause() {
         sistema.pausar();
-        game.setScreen(new PausaScreen(game, this)); 
+        game.setScreen(new PausaScreen(game, this));    
     }
 
     @Override
