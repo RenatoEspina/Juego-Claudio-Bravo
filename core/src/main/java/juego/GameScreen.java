@@ -2,7 +2,7 @@ package juego;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.Input; // Nueva importación para usar las teclas
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -25,14 +25,15 @@ public class GameScreen implements Screen {
         this.font = game.getFont();
 
         // Cargar assets para Claudio Bravo
-        Sound atajadaSound = Gdx.audio.newSound(Gdx.files.internal("atajada.wav"));
+        // Se elimina la carga de atajada.wav para solucionar el error de "File not found"
+        // Sound atajadaSound = Gdx.audio.newSound(Gdx.files.internal("atajada.wav")); 
         Sound golSound = Gdx.audio.newSound(Gdx.files.internal("gol.wav"));
         Sound premioSound = Gdx.audio.newSound(Gdx.files.internal("premio.wav"));
 
+        // Se ajusta el constructor de ArqueroClaudioBravo para que no reciba sonidos
         arquero = new ArqueroClaudioBravo(
-            new Texture(Gdx.files.internal("claudio_bravo.png")),
-            atajadaSound,
-            golSound
+            new Texture(Gdx.files.internal("claudio_bravo.png"))
+            // Se eliminan los argumentos de sonido: atajadaSound, golSound
         );
 
         // Cargar assets del sistema de juego
@@ -43,9 +44,15 @@ public class GameScreen implements Screen {
 
         Music musicaFondo = Gdx.audio.newMusic(Gdx.files.internal("hinchada.mp3"));
 
+        // **NOTA IMPORTANTE:**
+        // Asumo que ya modificaste SistemaDeJuego.java para que solo reciba golSound y premioSound,
+        // ya que atajadaSound fue eliminado de ArqueroClaudioBravo.
+        // Si SistemaDeJuego aún espera atajadaSound, el código de abajo causará un error.
+        
         sistema = new SistemaDeJuego(
             balonNormal, balonDificil, premioVida, premioPuntos,
-            atajadaSound, golSound, premioSound, musicaFondo
+            golSound, premioSound, musicaFondo
+            // Se elimina atajadaSound
         );
 
         camera = new OrthographicCamera();
@@ -121,5 +128,8 @@ public class GameScreen implements Screen {
     public void dispose() {
         arquero.destruir();
         sistema.destruir();
+        
+        // Es esencial que los recursos de sonido que SÍ se cargaron se liberen:
+        // gol.wav y premio.wav se liberarán en SistemaDeJuego.destruir()
     }
 }

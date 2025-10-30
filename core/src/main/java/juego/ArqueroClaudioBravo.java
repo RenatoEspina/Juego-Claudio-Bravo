@@ -8,8 +8,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 
 public class ArqueroClaudioBravo extends EntidadMovil {
-    private Sound sonidoAtajada;
-    private Sound sonidoGol;
+    
     private int vidas = 3;
     private int atajadas = 0;
     private int golesRecibidos = 0;
@@ -24,17 +23,23 @@ public class ArqueroClaudioBravo extends EntidadMovil {
 
     // Constantes para márgenes de la cancha (800x480)
     private final float ANCHO_PANTALLA = 800;
-    private final float MARGEN_LATERAL = 100; // CAMBIO: Margen aumentado a 100
+    private final float MARGEN_LATERAL = 100;
     
-    // Constantes para la Hitbox (Dimensiones originales: 233x113)
-    private final float HITBOX_OFFSET_Y = 57; 
-    private final float HITBOX_ALTURA_REDUCIDA = 113 - HITBOX_OFFSET_Y; 
-    private final float HITBOX_ANCHO_REDUCIDO = 200; 
+    // --- CONSTANTES DE HITBOX AJUSTADAS PARA CLARIDAD ---
+    private final float HITBOX_ANCHO = 200; 
+    private final float HITBOX_OFFSET_X = 16.5f; // (233 - 200) / 2 = 16.5
+    private final float HITBOX_ALTURA = 56f;     // 113 - 57 = 56
+    private final float HITBOX_OFFSET_Y = 57f; 
+    // NOTA: Se asume que el ancho de la textura es 233 y el alto es 113.
 
-    public ArqueroClaudioBravo(Texture textura, Sound atajadaSound, Sound golSound) {
+    // Constructor sin sonidos
+    public ArqueroClaudioBravo(Texture textura) {
         super(textura, 500f);
-        this.sonidoAtajada = atajadaSound;
-        this.sonidoGol = golSound;
+    }
+    
+    // Sobrecarga del constructor (para compatibilidad)
+    public ArqueroClaudioBravo(Texture textura, Sound atajadaSound, Sound golSound) {
+        this(textura);
     }
 
     @Override
@@ -54,11 +59,9 @@ public class ArqueroClaudioBravo extends EntidadMovil {
         // 2. Movimiento (A y D)
         float currentSpeed = super.velocidad;
         
-        // Mover Izquierda (A)
         if(Gdx.input.isKeyPressed(Input.Keys.A)) 
             area.x -= currentSpeed * delta;
         
-        // Mover Derecha (D)
         if(Gdx.input.isKeyPressed(Input.Keys.D)) 
             area.x += currentSpeed * delta;
             
@@ -68,10 +71,9 @@ public class ArqueroClaudioBravo extends EntidadMovil {
             tiempoDashRestante = DASH_DURACION;
         }
 
-        // 4. Limites de la cancha (con margen aumentado)
+        // 4. Limites de la cancha
         if(area.x < MARGEN_LATERAL) area.x = MARGEN_LATERAL;
         
-        // Límite derecho: ANCHO_PANTALLA - area.width - MARGEN_LATERAL
         if(area.x > ANCHO_PANTALLA - area.width - MARGEN_LATERAL) 
             area.x = ANCHO_PANTALLA - area.width - MARGEN_LATERAL; 
     }
@@ -81,12 +83,15 @@ public class ArqueroClaudioBravo extends EntidadMovil {
         batch.draw(textura, area.x, area.y, area.width, area.height);
     }
     
+    // --- Hitbox con las nuevas constantes ---
     public Rectangle getHitbox() {
         Rectangle hitbox = new Rectangle();
-        hitbox.width = HITBOX_ANCHO_REDUCIDO;
-        hitbox.height = HITBOX_ALTURA_REDUCIDA;
+        hitbox.width = HITBOX_ANCHO;
+        hitbox.height = HITBOX_ALTURA;
 
-        float offsetX = (area.width - HITBOX_ANCHO_REDUCIDO) / 2;
+        // Calcula el offset X basado en el ancho actual del área.
+        // Si el ancho del área es dinámico, este cálculo es más robusto.
+        float offsetX = (area.width - HITBOX_ANCHO) / 2;
         hitbox.x = area.x + offsetX; 
 
         hitbox.y = area.y + HITBOX_OFFSET_Y;
@@ -96,30 +101,25 @@ public class ArqueroClaudioBravo extends EntidadMovil {
 
     public void atajar() {
         atajadas++;
-        // El sonido se gestiona en SistemaDeJuego o Balon para evitar duplicados.
     }
     
-    // CAMBIO: Al recibir gol, pierde vida, suma gol y emite sonido.
-    public void recibirGol() {
-        golesRecibidos++;
+    // Este método ya no es usado para goles, pero se mantiene si es llamado por BalonDificil
+    public void penalizarVida() {
         vidas--;
-        // El sonido se gestiona en SistemaDeJuego o Balon para evitar duplicados.
     }
     
-    // NUEVO MÉTODO / CAMBIO: Para sumar goles cuando el balón se pasa (sin perder vida)
-    // También resta 1 punto de atajadas (puntaje) por no atajarlo.
-    public void incrementarGoles() {
+    public void registrarGol() {
         golesRecibidos++;
-        atajadas = Math.max(0, atajadas - 1); // Resta 1 punto, mínimo 0.
-        // El sonido debe manejarse en SistemaDeJuego.
+        vidas--; 
     }
-
+    
     // Métodos para Premios
     public void agregarVida() {
         vidas++;
     }
 
     public void sumarPuntos(int puntos) {
+        // Asumiendo que sumar puntos se suma al contador de 'atajadas', que funciona como score.
         atajadas += puntos;
     }
 
@@ -130,7 +130,5 @@ public class ArqueroClaudioBravo extends EntidadMovil {
 
     public void destruir() {
         textura.dispose();
-        sonidoAtajada.dispose();
-        sonidoGol.dispose();
     }
 }

@@ -1,67 +1,89 @@
 package juego;
 
-import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.math.Rectangle;
 
 public class BalonZigZag extends Balon {
-    private final float RETRASO_INICIAL = 1.0f; // 1 segundo de retraso
-    private final float CAMBIO_DIRECCION_TIEMPO = 0.5f; // Cambia de dirección cada 0.5 segundos
-    private final float VELOCIDAD_LATERAL = 300f; 
+    // Reducido a 0.6s
+    private final float MIN_TIEMPO_ZIG = 0.2f;
+    private final float MAX_TIEMPO_ZAG = 0.6f;
+    // Aumentado a 500f
+    private final float MIN_VELOCIDAD_LATERAL = 200f;
+    private final float MAX_VELOCIDAD_LATERAL = 500f;
+    
     private float tiempoInicio;
-    private float direccionLateral = 1; // 1 = derecha, -1 = izquierda
+    private float direccionLateral;
     private float tiempoDesdeUltimoCambio;
-    private final float MARGEN_LATERAL = 100; // Margen de la cancha
+    private float tiempoProximoCambio;
+    private float velocidadLateralActual;
+    private final float MARGEN_LATERAL = 100;
+    private final float ANCHO_PANTALLA = 800; // Constante para claridad
 
-    // Tipo 6: Balón ZigZag
-    public BalonZigZag(Texture textura, Sound sonido, float velocidad) {
-        super(textura, sonido, 6, velocidad);
+    public BalonZigZag(Texture textura, float velocidad) {
+        super(textura, 6, velocidad);
         this.tiempoInicio = TimeUtils.nanoTime();
         this.tiempoDesdeUltimoCambio = 0;
+        this.direccionLateral = MathUtils.randomBoolean() ? 1 : -1;
+        reiniciarTemporizador();
+    }
+
+    private void reiniciarTemporizador() {
+        // Aseguramos que la velocidad es al menos 200 para que el movimiento sea visible
+        this.tiempoProximoCambio = MathUtils.random(MIN_TIEMPO_ZIG, MAX_TIEMPO_ZAG);
+        this.velocidadLateralActual = MathUtils.random(MIN_VELOCIDAD_LATERAL, MAX_VELOCIDAD_LATERAL);
     }
 
     @Override
     public void mover(float delta) {
-        float tiempoTranscurrido = (TimeUtils.nanoTime() - tiempoInicio) / 1_000_000_000f;
-
-        // 1. Fase de espera de 1 segundo
-        if (tiempoTranscurrido < RETRASO_INICIAL) {
-            return;
-        }
-        
-        // Actualiza el tiempo desde el último cambio de dirección
-        tiempoDesdeUltimoCambio += delta;
-
-        // 2. Movimiento Vertical
+        // Movimiento Vertical
         area.y -= velocidad * delta;
         
-        // 3. Lógica de cambio de dirección
-        if (tiempoDesdeUltimoCambio >= CAMBIO_DIRECCION_TIEMPO) {
+        // Actualizar temporizador de zigzag
+        tiempoDesdeUltimoCambio += delta;
+        
+        // Cambiar dirección si es tiempo
+        if (tiempoDesdeUltimoCambio >= tiempoProximoCambio) {
             direccionLateral *= -1; // Invierte la dirección
-            tiempoDesdeUltimoCambio = 0;
+            cambiarDireccion();
         }
 
-        // 4. Movimiento Lateral (ZigZag)
-        area.x += VELOCIDAD_LATERAL * direccionLateral * delta;
+        // Movimiento Lateral
+        area.x += velocidadLateralActual * direccionLateral * delta;
 
-        // Limites de la cancha (Invierte dirección si toca el borde)
-        if(area.x < MARGEN_LATERAL) { // CAMBIO: Usar nuevo margen
-            area.x = MARGEN_LATERAL;
-            direccionLateral = 1;
-            tiempoDesdeUltimoCambio = 0;
-        }
-        if(area.x > 800 - area.width - MARGEN_LATERAL) { // CAMBIO: Usar nuevo margen
-            area.x = 800 - area.width - MARGEN_LATERAL;
-            direccionLateral = -1;
-            tiempoDesdeUltimoCambio = 0;
+        // Detección de colisión con bordes (Lógica mejorada)
+        boolean tocaBordeIzquierdo = area.x < MARGEN_LATERAL;
+        boolean tocaBordeDerecho = area.x > ANCHO_PANTALLA - area.width - MARGEN_LATERAL;
+
+        if (tocaBordeIzquierdo || tocaBordeDerecho) {
+            // Corregir posición y forzar cambio de dirección
+            if (tocaBordeIzquierdo) {
+                area.x = MARGEN_LATERAL;
+                // Forzamos el rebote solo si el balón iba hacia afuera
+                if (direccionLateral < 0) {
+                     direccionLateral = 1; 
+                     cambiarDireccion();
+                }
+            } else { // tocaBordeDerecho
+                area.x = ANCHO_PANTALLA - area.width - MARGEN_LATERAL;
+                // Forzamos el rebote solo si el balón iba hacia afuera
+                if (direccionLateral > 0) {
+                     direccionLateral = -1;
+                     cambiarDireccion();
+                }
+            }
         }
     }
     
-    // Al colisionar, es un golpe "limpio" (tipo 1 o 2), lo definiremos como Tipo 1 (atajada)
+    // Método auxiliar para reiniciar los parámetros aleatorios
+    private void cambiarDireccion() {
+        tiempoDesdeUltimoCambio = 0;
+        reiniciarTemporizador();
+    }
+    
     @Override
     public void alColisionar(ArqueroClaudioBravo arquero, Rectangle ballArea, Rectangle arqueroHitbox) {
-        arquero.atajar(); // Es un balón difícil, pero atajable.
-        // Sonido eliminado para ser gestionado en SistemaDeJuego.
+        arquero.atajar();
     }
 }
